@@ -34,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `sources.add_urls_batch()` / `source_add(urls=...)` support (#1998), these expose
   the verified batch-capable operations without adding MCP tools.
 
+### Documentation
+
+- **Master-token re-mint guidance (#1901).** The auth cookie lifecycle guide no
+  longer calls Web re-minting "single-consumer per account", and ADR-0023 gains
+  an amendment recording why. Live testing found that sessions minted from copies
+  of one master token stay independent. The guidance now warns against two
+  consumers actively using the same cookie session at once instead.
+
 ## [0.8.3] - 2026-09-25
 
 ### Added
