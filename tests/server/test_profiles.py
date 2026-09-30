@@ -31,6 +31,10 @@ HEADERS = {"Authorization": f"Bearer {TEST_TOKEN}", "Host": "127.0.0.1"}
 def isolated_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("NOTEBOOKLM_HOME", str(tmp_path))
     monkeypatch.delenv("NOTEBOOKLM_BACKEND", raising=False)
+    # Web multi-profile refuses these process-wide settings; keep the developer's
+    # shell from deciding test outcomes.
+    monkeypatch.delenv("NOTEBOOKLM_AUTH_JSON", raising=False)
+    monkeypatch.delenv("NOTEBOOKLM_HEADLESS_REAUTH_CDP_URL", raising=False)
 
 
 def profile_app(**kwargs: Any) -> Any:
@@ -565,9 +569,12 @@ def test_case_only_symlink_target_aliases_are_rejected(tmp_path: Path) -> None:
         create_app(profiles=["first", "second"], backend="android")
 
 
-def test_web_multi_profile_is_refused_and_single_entry_retains_behavior() -> None:
+def test_web_multi_profile_is_accepted_and_single_entry_retains_behavior() -> None:
+    # Web multi-profile is served (see test_web_profiles.py); only unknown
+    # backends are refused before startup.
+    create_app(profiles=["work", "personal"])
     with pytest.raises(ValueError, match="requires backend"):
-        create_app(profiles=["work", "personal"])
+        create_app(profiles=["work", "personal"], backend="auto")  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="mutually exclusive"):
         create_app(profile="work", profiles=["personal"], backend="android")
     app = create_app(profiles=["work"], client_factory=lambda: fake_factory("work"))
